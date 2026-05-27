@@ -15,8 +15,7 @@ import { X, Check, Calendar } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
 import { KindToggle } from '@/components/KindToggle';
-import { AmountDisplay } from '@/components/AmountDisplay';
-import { Numpad } from '@/components/Numpad';
+import { AmountInput } from '@/components/AmountInput';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { listCategories } from '@/db/categories';
 import {
@@ -146,7 +145,12 @@ export default function RecurringEditScreen() {
           </View>
 
           <View style={{ paddingVertical: 18 }}>
-            <AmountDisplay digits={digits} kind={kind} />
+            <AmountInput
+              digits={digits}
+              kind={kind}
+              onChangeDigits={setDigits}
+              autoFocus={!isEditing}
+            />
           </View>
 
           <View>
@@ -218,13 +222,6 @@ export default function RecurringEditScreen() {
             </View>
           </View>
 
-          <View>
-            <Label>Valor</Label>
-            <Numpad
-              onDigit={(d) => setDigits((prev) => (prev + d).slice(0, 11))}
-              onBackspace={() => setDigits((prev) => prev.slice(0, -1))}
-            />
-          </View>
         </ScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>

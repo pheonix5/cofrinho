@@ -60,8 +60,9 @@ function Option({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 10,
         paddingVertical: 10,
+        paddingHorizontal: 14,
         borderRadius: 10,
         backgroundColor: active ? `${tint}22` : 'transparent',
       }}

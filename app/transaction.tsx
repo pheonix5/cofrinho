@@ -16,8 +16,7 @@ import { Calendar, Mic, Trash2, X, Check } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
 import { KindToggle } from '@/components/KindToggle';
-import { AmountDisplay } from '@/components/AmountDisplay';
-import { Numpad } from '@/components/Numpad';
+import { AmountInput } from '@/components/AmountInput';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { PaymentMethodPicker } from '@/components/PaymentMethodPicker';
 import { InstallmentPicker } from '@/components/InstallmentPicker';
@@ -241,7 +240,12 @@ export default function TransactionScreen() {
           ) : null}
 
           <View style={{ paddingVertical: 18 }}>
-            <AmountDisplay digits={digits} kind={kind} />
+            <AmountInput
+              digits={digits}
+              kind={kind}
+              onChangeDigits={setDigits}
+              autoFocus={!isEditing}
+            />
           </View>
 
           {kind === 'expense' && cards.length > 0 ? (
@@ -327,13 +331,6 @@ export default function TransactionScreen() {
             ) : null}
           </View>
 
-          <View>
-            <Label>Valor</Label>
-            <Numpad
-              onDigit={(d) => setDigits((prev) => (prev + d).slice(0, 11))}
-              onBackspace={() => setDigits((prev) => prev.slice(0, -1))}
-            />
-          </View>
         </ScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>

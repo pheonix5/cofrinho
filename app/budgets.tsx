@@ -15,8 +15,7 @@ import { X, Check, Target, Trash2 } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
 import { CategoryIcon } from '@/components/CategoryIcon';
-import { AmountDisplay } from '@/components/AmountDisplay';
-import { Numpad } from '@/components/Numpad';
+import { AmountInput } from '@/components/AmountInput';
 import { BudgetBar, pickColor } from '@/components/BudgetBar';
 import { EmptyState } from '@/components/EmptyState';
 import { listCategories } from '@/db/categories';
@@ -359,13 +358,13 @@ function BudgetEditModal({
             </View>
 
             <View style={{ paddingVertical: 8 }}>
-              <AmountDisplay digits={digits} kind="expense" />
+              <AmountInput
+                digits={digits}
+                kind="expense"
+                onChangeDigits={setDigits}
+                autoFocus
+              />
             </View>
-
-            <Numpad
-              onDigit={(d) => setDigits((prev) => (prev + d).slice(0, 11))}
-              onBackspace={() => setDigits((prev) => prev.slice(0, -1))}
-            />
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
               {currentValue > 0 ? (

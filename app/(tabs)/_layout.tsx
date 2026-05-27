@@ -1,10 +1,15 @@
 import { Tabs } from 'expo-router';
 import { CreditCard, Home, PieChart, Settings } from 'lucide-react-native';
 import { Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
+  const baseBarHeight = Platform.OS === 'ios' ? 56 : 60;
+
   return (
     <Tabs
       screenOptions={{
@@ -15,9 +20,9 @@ export default function TabsLayout() {
           backgroundColor: colors.bgSoft,
           borderTopColor: colors.line,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 84 : 64,
+          height: baseBarHeight + bottomInset,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingBottom: bottomInset,
         },
         tabBarLabelStyle: {
           fontSize: 11,
