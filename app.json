@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "cofrinho",
+    "name": "Cofrinho",
     "slug": "cofrinho",
+    "scheme": "cofrinho",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +21,20 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-sharing",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Permitir que o Cofrinho acesse o microfone para lançamentos por voz.",
+          "speechRecognitionPermission": "Permitir que o Cofrinho reconheça sua voz para criar lançamentos."
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
