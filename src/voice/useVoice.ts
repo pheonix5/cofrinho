@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-type SpeechResultsEvent = { value?: string[] };
-type SpeechErrorEvent = { error?: { message?: string } };
-
-let Voice: any = null;
+let SpeechModule: any = null;
+let useSpeechEvent: (event: string, cb: (e: any) => void) => void = () => {};
 let loadError: string | null = null;
+
 try {
-  Voice = require('@react-native-voice/voice').default;
+  const mod = require('expo-speech-recognition');
+  SpeechModule = mod.ExpoSpeechRecognitionModule;
+  useSpeechEvent = mod.useSpeechRecognitionEvent;
 } catch (e: any) {
   loadError = e?.message ?? 'Módulo de voz indisponível.';
 }
 
-export const isVoiceAvailable = Voice != null;
+export const isVoiceAvailable = SpeechModule != null;
 
 export type VoiceState = 'idle' | 'listening' | 'processing' | 'error' | 'unavailable';
 
@@ -19,50 +20,55 @@ export function useVoice(locale = 'pt-BR') {
   const [state, setState] = useState<VoiceState>(isVoiceAvailable ? 'idle' : 'unavailable');
   const [partial, setPartial] = useState<string>('');
   const [error, setError] = useState<string | null>(
-    isVoiceAvailable ? null : 'Voz só funciona em development build (não roda no Expo Go).'
+    isVoiceAvailable ? null : 'Voz só funciona em development build / APK (não roda no Expo Go).'
   );
   const finalRef = useRef<string>('');
 
-  useEffect(() => {
-    if (!isVoiceAvailable) return;
-    Voice.onSpeechStart = () => {
-      setState('listening');
-      setPartial('');
-      finalRef.current = '';
-      setError(null);
-    };
-    Voice.onSpeechPartialResults = (e: SpeechResultsEvent) => {
-      if (e.value && e.value[0]) setPartial(e.value[0]);
-    };
-    Voice.onSpeechResults = (e: SpeechResultsEvent) => {
-      if (e.value && e.value[0]) {
-        finalRef.current = e.value[0];
-        setPartial(e.value[0]);
-      }
-    };
-    Voice.onSpeechError = (e: SpeechErrorEvent) => {
-      setError(e.error?.message ?? 'Não foi possível reconhecer.');
-      setState('error');
-    };
-    Voice.onSpeechEnd = () => {
-      setState((s) => (s === 'listening' ? 'processing' : s));
-    };
-    return () => {
-      Voice.destroy().then(() => Voice.removeAllListeners());
-    };
-  }, []);
+  useSpeechEvent('start', () => {
+    setState('listening');
+    setPartial('');
+    finalRef.current = '';
+    setError(null);
+  });
+
+  useSpeechEvent('result', (e: any) => {
+    const transcript = e?.results?.[0]?.transcript ?? '';
+    if (transcript) {
+      setPartial(transcript);
+      if (e?.isFinal) finalRef.current = transcript;
+    }
+  });
+
+  useSpeechEvent('error', (e: any) => {
+    setError(e?.message ?? e?.error ?? 'Não foi possível reconhecer.');
+    setState('error');
+  });
+
+  useSpeechEvent('end', () => {
+    setState((s) => (s === 'listening' ? 'processing' : s));
+  });
 
   const start = useCallback(async () => {
-    if (!isVoiceAvailable) {
-      setError('Voz indisponível no Expo Go. Crie um development build.');
+    if (!SpeechModule) {
+      setError('Voz indisponível neste build.');
       setState('unavailable');
       return;
     }
     try {
+      const result = await SpeechModule.requestPermissionsAsync();
+      if (!result?.granted) {
+        setError('Permissão de microfone negada.');
+        setState('error');
+        return;
+      }
       setError(null);
       setPartial('');
       finalRef.current = '';
-      await Voice.start(locale);
+      SpeechModule.start({
+        lang: locale,
+        interimResults: true,
+        continuous: false,
+      });
     } catch (e: any) {
       setError(e?.message ?? 'Erro ao iniciar microfone.');
       setState('error');
@@ -70,9 +76,9 @@ export function useVoice(locale = 'pt-BR') {
   }, [locale]);
 
   const stop = useCallback(async (): Promise<string> => {
-    if (!isVoiceAvailable) return '';
+    if (!SpeechModule) return '';
     try {
-      await Voice.stop();
+      SpeechModule.stop();
     } catch {}
     const text = finalRef.current || partial;
     setState('idle');
@@ -80,9 +86,13 @@ export function useVoice(locale = 'pt-BR') {
   }, [partial]);
 
   const cancel = useCallback(async () => {
-    if (!isVoiceAvailable) return;
+    if (!SpeechModule) return;
     try {
-      await Voice.cancel();
+      if (typeof SpeechModule.abort === 'function') {
+        SpeechModule.abort();
+      } else {
+        SpeechModule.stop();
+      }
     } catch {}
     setState('idle');
     setPartial('');

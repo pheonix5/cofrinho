@@ -32,7 +32,7 @@
       "expo-sqlite",
       "expo-sharing",
       [
-        "@react-native-voice/voice",
+        "expo-speech-recognition",
         {
           "microphonePermission": "Permitir que o Cofrinho acesse o microfone para lançamentos por voz.",
           "speechRecognitionPermission": "Permitir que o Cofrinho reconheça sua voz para criar lançamentos."
