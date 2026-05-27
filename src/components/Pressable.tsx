@@ -7,12 +7,14 @@ type Props = PressableProps & {
   haptic?: 'light' | 'medium' | 'heavy' | 'selection' | false;
   scaleTo?: number;
   style?: StyleProp<ViewStyle>;
+  wrapperStyle?: StyleProp<ViewStyle>;
 };
 
 export function Pressable({
   haptic = 'light',
   scaleTo = 0.97,
   style,
+  wrapperStyle,
   onPressIn,
   onPressOut,
   onPress,
@@ -23,6 +25,7 @@ export function Pressable({
 
   return (
     <RNPressable
+      style={wrapperStyle as any}
       onPressIn={(e) => {
         Animated.spring(scale, { toValue: scaleTo, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
         onPressIn?.(e);

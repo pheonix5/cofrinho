@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Modal, Animated, Easing } from 'react-native';
-import { Mic, X } from 'lucide-react-native';
+import { Mic, X, Check } from 'lucide-react-native';
 import { Pressable } from './Pressable';
 import { useVoice } from '@/voice/useVoice';
 import { parseVoiceCommand } from '@/voice/parser';
@@ -12,6 +12,33 @@ type Props = {
   onClose: () => void;
   onResult: (parsed: ParsedVoice, raw: string) => void;
 };
+
+function translateVoiceError(raw: string | null): string | null {
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  if (lower.includes('no speech') || lower.includes('no-speech') || lower.includes('no match')) {
+    return 'Não entendi nada. Tenta de novo falando mais perto do microfone.';
+  }
+  if (lower.includes('permission') || lower.includes('not-allowed') || lower.includes('not allowed')) {
+    return 'Permissão de microfone negada. Habilite nas configurações.';
+  }
+  if (lower.includes('network')) {
+    return 'Sem conexão com o serviço de reconhecimento.';
+  }
+  if (lower.includes('audio') && lower.includes('capture')) {
+    return 'Não foi possível acessar o microfone.';
+  }
+  if (lower.includes('language') && lower.includes('not')) {
+    return 'Português não está disponível neste dispositivo.';
+  }
+  if (lower.includes('busy')) {
+    return 'O microfone está ocupado. Tente novamente.';
+  }
+  if (lower.includes('client') || lower.includes('canceled') || lower.includes('cancelled')) {
+    return 'Reconhecimento cancelado.';
+  }
+  return raw;
+}
 
 export function VoiceCapture({ visible, onClose, onResult }: Props) {
   const { state, partial, error, start, stop, cancel } = useVoice();
@@ -50,6 +77,7 @@ export function VoiceCapture({ visible, onClose, onResult }: Props) {
 
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.4] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] });
+  const friendlyError = translateVoiceError(error);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={handleCancel}>
@@ -115,40 +143,50 @@ export function VoiceCapture({ visible, onClose, onResult }: Props) {
             >
               {partial || 'Diga algo como “gastei 35 reais no mercado”.'}
             </Text>
-            {error ? (
-              <Text style={{ color: colors.expense, fontSize: 12, textAlign: 'center' }}>{error}</Text>
+            {friendlyError ? (
+              <Text style={{ color: colors.expense, fontSize: 12, textAlign: 'center' }}>{friendlyError}</Text>
             ) : null}
           </View>
 
           <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
             <Pressable
               onPress={handleCancel}
+              wrapperStyle={{ flex: 1 }}
               style={{
-                flex: 1,
+                width: '100%',
                 paddingVertical: 14,
                 borderRadius: 14,
                 backgroundColor: colors.bgSoft,
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
-                gap: 6,
+                gap: 8,
               }}
             >
               <X size={16} color={colors.inkSoft} />
-              <Text style={{ color: colors.inkSoft, fontWeight: '600' }}>Cancelar</Text>
+              <Text style={{ color: colors.inkSoft, fontWeight: '700', fontSize: 14 }}>
+                Cancelar
+              </Text>
             </Pressable>
             <Pressable
               onPress={handleStop}
               haptic="medium"
+              wrapperStyle={{ flex: 1 }}
               style={{
-                flex: 1,
+                width: '100%',
                 paddingVertical: 14,
                 borderRadius: 14,
                 backgroundColor: colors.brand,
                 alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
               }}
             >
-              <Text style={{ color: colors.bg, fontWeight: '700' }}>Concluir</Text>
+              <Check size={16} color={colors.bg} strokeWidth={2.6} />
+              <Text style={{ color: colors.bg, fontWeight: '800', fontSize: 14 }}>
+                Concluir
+              </Text>
             </Pressable>
           </View>
         </View>

@@ -103,7 +103,7 @@ export default function RecurringEditScreen() {
   }, [cents, kind, categoryId, description, dayOfMonth, isEditing, editingId, db, bump, router]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

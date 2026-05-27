@@ -84,9 +84,9 @@ export const AmountInput = forwardRef<AmountInputHandle, Props>(function AmountI
             width: '100%',
             minHeight: 64,
             fontSize: 48,
-            color: 'transparent',
             textAlign: 'center',
             padding: 0,
+            opacity: 0,
           }}
         />
       </View>

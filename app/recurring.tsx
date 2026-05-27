@@ -59,7 +59,7 @@ export default function RecurringListScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
       <View
         style={{
           flexDirection: 'row',

@@ -60,7 +60,7 @@ export default function BudgetsScreen() {
   const totalSpent = items.reduce((acc, b) => acc + b.spent_cents, 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
       <View
         style={{
           flexDirection: 'row',
