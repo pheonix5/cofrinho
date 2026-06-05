@@ -43,11 +43,12 @@ export default function TransactionScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
   const bump = useBumpReload();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; kind?: string }>();
   const editingId = params.id ? parseInt(params.id, 10) : null;
   const isEditing = editingId !== null && !Number.isNaN(editingId);
+  const initialKind: TxKind = params.kind === 'income' ? 'income' : 'expense';
 
-  const [kind, setKind] = useState<TxKind>('expense');
+  const [kind, setKind] = useState<TxKind>(initialKind);
   const [digits, setDigits] = useState<string>('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [description, setDescription] = useState<string>('');

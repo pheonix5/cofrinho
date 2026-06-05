@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 import { DB_NAME, migrate } from '@/db/schema';
 import { ReloadProvider } from '@/hooks/useReload';
 import { RecurrencesRunner } from '@/hooks/useRunRecurrences';
+import { QuickActionBridge } from '@/notifications/QuickActionBridge';
 import { colors } from '@/theme/colors';
 
 export default function RootLayout() {
@@ -25,6 +26,7 @@ export default function RootLayout() {
           <SQLiteProvider databaseName={DB_NAME} onInit={migrate} useSuspense>
             <ReloadProvider>
               <RecurrencesRunner />
+              <QuickActionBridge />
               <StatusBar style="light" />
               <Stack
                 screenOptions={{
