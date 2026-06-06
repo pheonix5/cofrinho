@@ -43,16 +43,31 @@ export default function TransactionScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
   const bump = useBumpReload();
-  const params = useLocalSearchParams<{ id?: string; kind?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    kind?: string;
+    amount?: string;
+    categoryId?: string;
+    description?: string;
+    date?: string;
+    recurringId?: string;
+  }>();
   const editingId = params.id ? parseInt(params.id, 10) : null;
   const isEditing = editingId !== null && !Number.isNaN(editingId);
   const initialKind: TxKind = params.kind === 'income' ? 'income' : 'expense';
+  const initialAmount = params.amount ? params.amount.replace(/\D/g, '') : '';
+  const initialCategoryId =
+    params.categoryId && /^\d+$/.test(params.categoryId) ? parseInt(params.categoryId, 10) : null;
+  const initialDescription = params.description ?? '';
+  const initialDate = params.date ? new Date(`${params.date}T12:00:00`) : new Date();
+  const recurringId =
+    params.recurringId && /^\d+$/.test(params.recurringId) ? parseInt(params.recurringId, 10) : null;
 
   const [kind, setKind] = useState<TxKind>(initialKind);
-  const [digits, setDigits] = useState<string>('');
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [description, setDescription] = useState<string>('');
-  const [date, setDate] = useState<Date>(new Date());
+  const [digits, setDigits] = useState<string>(initialAmount);
+  const [categoryId, setCategoryId] = useState<number | null>(initialCategoryId);
+  const [description, setDescription] = useState<string>(initialDescription);
+  const [date, setDate] = useState<Date>(initialDate);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [cardId, setCardId] = useState<number | null>(null);
@@ -133,6 +148,7 @@ export default function TransactionScreen() {
       occurred_at: date.toISOString(),
       card_id: cardId,
       installments,
+      recurring_id: recurringId,
     };
     if (isEditing) {
       await updateTransaction(db, editingId!, payload);
@@ -141,7 +157,7 @@ export default function TransactionScreen() {
     }
     bump();
     router.back();
-  }, [cents, kind, categoryId, description, date, cardId, installments, isEditing, editingId, db, bump, router]);
+  }, [cents, kind, categoryId, description, date, cardId, installments, recurringId, isEditing, editingId, db, bump, router]);
 
   const handleDelete = useCallback(() => {
     Alert.alert('Apagar lançamento?', 'Esta ação não pode ser desfeita.', [

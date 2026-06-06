@@ -18,6 +18,7 @@ export type Transaction = {
   occurred_at: string;
   created_at: string;
   card_id: number | null;
+  recurring_id: number | null;
   installment_group: string | null;
   installment_number: number | null;
   installment_total: number | null;
@@ -31,6 +32,24 @@ export type TransactionWithCategory = Transaction & {
   card_name: string | null;
   card_color: string | null;
 };
+
+export type ProjectedListItem = {
+  is_projection: true;
+  template_id: number;
+  synthetic_id: string;
+  kind: TxKind;
+  amount_cents: number;
+  category_id: number | null;
+  category_name: string | null;
+  category_icon: string | null;
+  category_color: string | null;
+  description: string | null;
+  occurred_at: string;
+};
+
+export type ListItem =
+  | (TransactionWithCategory & { is_projection?: false })
+  | ProjectedListItem;
 
 export type PeriodSummary = {
   income_cents: number;

@@ -58,6 +58,13 @@ export default function RootLayout() {
                   }}
                 />
                 <Stack.Screen
+                  name="installment"
+                  options={{
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
+                <Stack.Screen
                   name="budgets"
                   options={{
                     presentation: 'modal',

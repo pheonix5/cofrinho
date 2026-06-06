@@ -146,6 +146,60 @@ export async function setRecurringActive(
   ]);
 }
 
+export async function listActiveTemplatesWithCategory(
+  db: SQLiteDatabase
+): Promise<RecurringWithCategory[]> {
+  return db.getAllAsync<RecurringWithCategory>(
+    `SELECT r.*,
+            c.name AS category_name,
+            c.icon AS category_icon,
+            c.color AS category_color
+     FROM recurring_templates r
+     LEFT JOIN categories c ON c.id = r.category_id
+     WHERE r.active = 1`
+  );
+}
+
+export type ProjectedOccurrence = {
+  template_id: number;
+  kind: TxKind;
+  amount_cents: number;
+  category_id: number | null;
+  category_name: string | null;
+  category_icon: string | null;
+  category_color: string | null;
+  description: string | null;
+  occurred_at: string;
+};
+
+export function projectRecurrencesForMonth(
+  templates: RecurringWithCategory[],
+  monthDate: Date,
+  realTxRecurringIds: Set<number>,
+  now: Date = new Date()
+): ProjectedOccurrence[] {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const result: ProjectedOccurrence[] = [];
+  for (const t of templates) {
+    if (realTxRecurringIds.has(t.id)) continue;
+    const candidate = clampedDayOfMonth(year, month, t.day_of_month);
+    if (candidate.getTime() < now.getTime()) continue;
+    result.push({
+      template_id: t.id,
+      kind: t.kind,
+      amount_cents: t.amount_cents,
+      category_id: t.category_id,
+      category_name: t.category_name,
+      category_icon: t.category_icon,
+      category_color: t.category_color,
+      description: t.description,
+      occurred_at: candidate.toISOString(),
+    });
+  }
+  return result;
+}
+
 function lastDayOfMonth(year: number, month0: number): number {
   return new Date(year, month0 + 1, 0).getDate();
 }

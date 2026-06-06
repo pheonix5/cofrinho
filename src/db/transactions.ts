@@ -9,6 +9,16 @@ export type TxInput = {
   occurred_at: string;
   card_id?: number | null;
   installments?: number;
+  recurring_id?: number | null;
+};
+
+export type InstallmentSeriesInput = {
+  kind: TxKind;
+  per_parcel_cents: number;
+  parcel_count: number;
+  category_id: number | null;
+  description: string | null;
+  first_occurrence: string;
 };
 
 function makeGroupId(): string {
@@ -37,8 +47,8 @@ export async function createTransaction(
   if (installments === 1 || !cardId) {
     const result = await db.runAsync(
       `INSERT INTO transactions
-         (kind, amount_cents, category_id, description, occurred_at, card_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+         (kind, amount_cents, category_id, description, occurred_at, card_id, recurring_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         input.kind,
         input.amount_cents,
@@ -46,6 +56,7 @@ export async function createTransaction(
         input.description?.trim() || null,
         input.occurred_at,
         cardId,
+        input.recurring_id ?? null,
       ]
     );
     return result.lastInsertRowId;
@@ -101,6 +112,45 @@ export async function updateTransaction(
       id,
     ]
   );
+}
+
+export async function createInstallmentSeries(
+  db: SQLiteDatabase,
+  input: InstallmentSeriesInput
+): Promise<string> {
+  const group = makeGroupId();
+  const desc = input.description?.trim() || null;
+  const count = Math.max(1, Math.floor(input.parcel_count));
+  await db.withTransactionAsync(async () => {
+    for (let i = 1; i <= count; i++) {
+      const occurred = i === 1 ? input.first_occurrence : addMonths(input.first_occurrence, i - 1);
+      const parcelDesc = desc ? `${desc} (${i}/${count})` : `Parcela ${i}/${count}`;
+      await db.runAsync(
+        `INSERT INTO transactions
+           (kind, amount_cents, category_id, description, occurred_at,
+            installment_group, installment_number, installment_total)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          input.kind,
+          input.per_parcel_cents,
+          input.category_id,
+          parcelDesc,
+          occurred,
+          group,
+          i,
+          count,
+        ]
+      );
+    }
+  });
+  return group;
+}
+
+export async function deleteInstallmentSeries(
+  db: SQLiteDatabase,
+  groupId: string
+): Promise<void> {
+  await db.runAsync('DELETE FROM transactions WHERE installment_group = ?', [groupId]);
 }
 
 export async function deleteTransaction(

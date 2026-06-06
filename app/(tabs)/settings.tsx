@@ -15,6 +15,7 @@ import {
   Loader,
   Repeat,
   Target,
+  Layers,
 } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
@@ -169,6 +170,13 @@ export default function SettingsScreen() {
             title="Orçamentos por categoria"
             subtitle="Defina limites mensais de gastos"
             onPress={() => router.push('/budgets')}
+          />
+          <Item
+            Icon={Layers}
+            tint={colors.accent}
+            title="Lançamento parcelado"
+            subtitle="Compra ou dívida com data para acabar"
+            onPress={() => router.push('/installment')}
           />
         </Section>
 

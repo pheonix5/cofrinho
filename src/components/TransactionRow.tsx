@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
-import { CreditCard } from 'lucide-react-native';
-import type { TransactionWithCategory } from '@/db/types';
+import { Clock, CreditCard, Layers } from 'lucide-react-native';
+import type { ListItem } from '@/db/types';
 import { CategoryIcon } from './CategoryIcon';
 import { Pressable } from './Pressable';
 import { formatBRL } from '@/utils/format';
@@ -8,7 +8,7 @@ import { formatDateLabel } from '@/utils/date';
 import { colors } from '@/theme/colors';
 
 type Props = {
-  tx: TransactionWithCategory;
+  tx: ListItem;
   onPress?: () => void;
   showDate?: boolean;
 };
@@ -16,6 +16,18 @@ type Props = {
 export function TransactionRow({ tx, onPress, showDate = true }: Props) {
   const isIncome = tx.kind === 'income';
   const color = tx.category_color ?? '#8A8A99';
+  const isProjection = tx.is_projection === true;
+
+  const cardName = !isProjection ? tx.card_name : null;
+  const cardColor = !isProjection ? tx.card_color : null;
+  const installmentTotal = !isProjection ? tx.installment_total : null;
+  const installmentNumber = !isProjection ? tx.installment_number : null;
+  const noCardInstallment =
+    !isProjection &&
+    !cardName &&
+    installmentTotal != null &&
+    installmentTotal > 1 &&
+    installmentNumber != null;
 
   return (
     <Pressable
@@ -30,6 +42,10 @@ export function TransactionRow({ tx, onPress, showDate = true }: Props) {
         backgroundColor: '#1C1C26',
         borderRadius: 16,
         marginBottom: 8,
+        opacity: isProjection ? 0.7 : 1,
+        borderWidth: isProjection ? 1 : 0,
+        borderColor: isProjection ? colors.line : 'transparent',
+        borderStyle: isProjection ? 'dashed' : 'solid',
       }}
     >
       <View
@@ -54,7 +70,7 @@ export function TransactionRow({ tx, onPress, showDate = true }: Props) {
             {tx.category_name ?? 'Sem categoria'}
             {showDate ? ` · ${formatDateLabel(tx.occurred_at)}` : ''}
           </Text>
-          {tx.card_name ? (
+          {isProjection ? (
             <View
               style={{
                 flexDirection: 'row',
@@ -63,15 +79,51 @@ export function TransactionRow({ tx, onPress, showDate = true }: Props) {
                 paddingHorizontal: 6,
                 paddingVertical: 1,
                 borderRadius: 999,
-                backgroundColor: `${tx.card_color ?? colors.inkMuted}22`,
+                backgroundColor: `${colors.inkMuted}22`,
               }}
             >
-              <CreditCard size={9} color={tx.card_color ?? colors.inkMuted} strokeWidth={2.4} />
-              <Text style={{ color: tx.card_color ?? colors.inkMuted, fontSize: 10, fontWeight: '700' }}>
-                {tx.card_name}
-                {tx.installment_total && tx.installment_total > 1
-                  ? ` ${tx.installment_number}/${tx.installment_total}`
+              <Clock size={9} color={colors.inkMuted} strokeWidth={2.4} />
+              <Text style={{ color: colors.inkMuted, fontSize: 10, fontWeight: '700' }}>
+                Previsto
+              </Text>
+            </View>
+          ) : null}
+          {cardName ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 999,
+                backgroundColor: `${cardColor ?? colors.inkMuted}22`,
+              }}
+            >
+              <CreditCard size={9} color={cardColor ?? colors.inkMuted} strokeWidth={2.4} />
+              <Text style={{ color: cardColor ?? colors.inkMuted, fontSize: 10, fontWeight: '700' }}>
+                {cardName}
+                {installmentTotal && installmentTotal > 1
+                  ? ` ${installmentNumber}/${installmentTotal}`
                   : ''}
+              </Text>
+            </View>
+          ) : null}
+          {noCardInstallment ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 999,
+                backgroundColor: `${colors.accent}22`,
+              }}
+            >
+              <Layers size={9} color={colors.accent} strokeWidth={2.4} />
+              <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '700' }}>
+                {installmentNumber}/{installmentTotal}
               </Text>
             </View>
           ) : null}

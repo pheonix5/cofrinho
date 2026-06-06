@@ -1,18 +1,20 @@
 import { View, Text } from 'react-native';
-import { ArrowDownLeft, ArrowUpRight, Wallet, TrendingDown, TrendingUp } from 'lucide-react-native';
+import { ArrowDownLeft, ArrowUpRight, Wallet, TrendingDown, TrendingUp, Clock } from 'lucide-react-native';
 import { formatBRL } from '@/utils/format';
 import { colors } from '@/theme/colors';
 import type { PeriodSummary } from '@/db/types';
 
 type Props = {
   summary: PeriodSummary;
+  projection?: PeriodSummary | null;
   label: string;
   expenseDeltaPct?: number | null;
   incomeDeltaPct?: number | null;
 };
 
-export function SummaryCard({ summary, label, expenseDeltaPct, incomeDeltaPct }: Props) {
+export function SummaryCard({ summary, projection, label, expenseDeltaPct, incomeDeltaPct }: Props) {
   const positive = summary.balance_cents >= 0;
+  const projectedBalance = projection ? summary.balance_cents + projection.balance_cents : null;
   return (
     <View
       style={{
@@ -46,6 +48,33 @@ export function SummaryCard({ summary, label, expenseDeltaPct, incomeDeltaPct }:
         <Text style={{ color: colors.inkMuted, fontSize: 12 }}>
           {summary.count} {summary.count === 1 ? 'lançamento' : 'lançamentos'}
         </Text>
+        {projection && projectedBalance != null ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 8,
+              paddingTop: 8,
+              borderTopWidth: 1,
+              borderTopColor: colors.line,
+            }}
+          >
+            <Clock size={12} color={colors.inkMuted} strokeWidth={2.4} />
+            <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: '600' }}>
+              Com previstos:{' '}
+              <Text
+                style={{
+                  color: projectedBalance >= 0 ? colors.brand : colors.expense,
+                  fontWeight: '800',
+                  fontVariant: ['tabular-nums'],
+                }}
+              >
+                {formatBRL(projectedBalance, { showSign: false })}
+              </Text>
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={{ flexDirection: 'row', gap: 12 }}>
