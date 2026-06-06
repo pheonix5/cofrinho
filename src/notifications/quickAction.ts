@@ -7,6 +7,15 @@ export const QUICK_ACTION_NOTIFICATION_ID = 'cofrinho-quick-action';
 export const QUICK_ACTION_EXPENSE = 'expense';
 export const QUICK_ACTION_INCOME = 'income';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 let setupPromise: Promise<void> | null = null;
 
 export function setupQuickActionNotification(): Promise<void> {

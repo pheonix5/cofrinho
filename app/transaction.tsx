@@ -113,9 +113,10 @@ export default function TransactionScreen() {
 
   useEffect(() => {
     if (categoryId == null) return;
+    if (categories.length === 0) return;
     const stillValid = visibleCategories.some((c) => c.id === categoryId);
     if (!stillValid) setCategoryId(null);
-  }, [visibleCategories, categoryId]);
+  }, [visibleCategories, categoryId, categories.length]);
 
   const cents = digitsToCents(digits);
 

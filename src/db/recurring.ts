@@ -55,6 +55,7 @@ export async function createRecurring(
   db: SQLiteDatabase,
   input: RecurringInput
 ): Promise<number> {
+  const description = input.description?.trim() || null;
   const r = await db.runAsync(
     `INSERT INTO recurring_templates
        (kind, amount_cents, category_id, description, day_of_month, active)
@@ -63,12 +64,49 @@ export async function createRecurring(
       input.kind,
       input.amount_cents,
       input.category_id,
-      input.description?.trim() || null,
+      description,
       input.day_of_month,
       input.active ? 1 : 0,
     ]
   );
-  return r.lastInsertRowId;
+  const id = r.lastInsertRowId;
+
+  if (input.active) {
+    const now = new Date();
+    const effectiveDay = Math.min(
+      input.day_of_month,
+      lastDayOfMonth(now.getFullYear(), now.getMonth())
+    );
+    if (now.getDate() >= effectiveDay) {
+      const occurredAt = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        effectiveDay,
+        12,
+        0,
+        0
+      );
+      await db.runAsync(
+        `INSERT INTO transactions
+           (kind, amount_cents, category_id, description, occurred_at, recurring_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          input.kind,
+          input.amount_cents,
+          input.category_id,
+          description,
+          occurredAt.toISOString(),
+          id,
+        ]
+      );
+      await db.runAsync(
+        'UPDATE recurring_templates SET last_run_at = ? WHERE id = ?',
+        [occurredAt.toISOString(), id]
+      );
+    }
+  }
+
+  return id;
 }
 
 export async function updateRecurring(

@@ -40,7 +40,7 @@ export default function RecurringEditScreen() {
   const [digits, setDigits] = useState<string>('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [description, setDescription] = useState<string>('');
-  const [dayOfMonth, setDayOfMonth] = useState<number>(5);
+  const [dayStr, setDayStr] = useState<string>('5');
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function RecurringEditScreen() {
       setDigits(String(r.amount_cents));
       setCategoryId(r.category_id);
       setDescription(r.description ?? '');
-      setDayOfMonth(r.day_of_month);
+      setDayStr(String(r.day_of_month));
     })();
   }, [db, editingId, isEditing]);
 
@@ -70,9 +70,10 @@ export default function RecurringEditScreen() {
 
   useEffect(() => {
     if (categoryId == null) return;
+    if (categories.length === 0) return;
     const stillValid = visibleCategories.some((c) => c.id === categoryId);
     if (!stillValid) setCategoryId(null);
-  }, [visibleCategories, categoryId]);
+  }, [visibleCategories, categoryId, categories.length]);
 
   const cents = digitsToCents(digits);
 
@@ -81,7 +82,8 @@ export default function RecurringEditScreen() {
       Alert.alert('Valor inválido', 'Informe um valor maior que zero.');
       return;
     }
-    if (dayOfMonth < 1 || dayOfMonth > 31) {
+    const dayOfMonth = parseInt(dayStr, 10);
+    if (Number.isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
       Alert.alert('Dia inválido', 'Escolha um dia entre 1 e 31.');
       return;
     }
@@ -100,7 +102,7 @@ export default function RecurringEditScreen() {
     }
     bump();
     router.back();
-  }, [cents, kind, categoryId, description, dayOfMonth, isEditing, editingId, db, bump, router]);
+  }, [cents, kind, categoryId, description, dayStr, isEditing, editingId, db, bump, router]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
@@ -200,11 +202,10 @@ export default function RecurringEditScreen() {
               <Calendar size={18} color={colors.inkSoft} />
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>Lança todo dia</Text>
               <TextInput
-                value={String(dayOfMonth)}
+                value={dayStr}
                 onChangeText={(v) => {
-                  const n = parseInt(v.replace(/\D/g, ''), 10);
-                  if (!Number.isNaN(n)) setDayOfMonth(Math.max(1, Math.min(31, n)));
-                  else if (v === '') setDayOfMonth(1);
+                  const cleaned = v.replace(/\D/g, '').slice(0, 2);
+                  setDayStr(cleaned);
                 }}
                 keyboardType="number-pad"
                 maxLength={2}
@@ -217,7 +218,7 @@ export default function RecurringEditScreen() {
                 }}
               />
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>
-                {dayOfMonth > 28 ? '(ou último dia do mês)' : ''}
+                {parseInt(dayStr, 10) > 28 ? '(ou último dia do mês)' : ''}
               </Text>
             </View>
           </View>
