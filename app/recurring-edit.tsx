@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,7 @@ export default function RecurringEditScreen() {
   const [description, setDescription] = useState<string>('');
   const [dayStr, setDayStr] = useState<string>('5');
   const [categories, setCategories] = useState<Category[]>([]);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     (async () => {
@@ -139,6 +140,7 @@ export default function RecurringEditScreen() {
         </View>
 
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 20 }}
           keyboardShouldPersistTaps="handled"
         >
@@ -206,6 +208,9 @@ export default function RecurringEditScreen() {
                 onChangeText={(v) => {
                   const cleaned = v.replace(/\D/g, '').slice(0, 2);
                   setDayStr(cleaned);
+                }}
+                onFocus={() => {
+                  setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
                 }}
                 keyboardType="number-pad"
                 maxLength={2}

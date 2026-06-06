@@ -315,7 +315,10 @@ function BudgetEditModal({
           haptic={false}
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' }}
         />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%' }}
+        >
           <View
             style={{
               backgroundColor: colors.bgSoft,
@@ -327,6 +330,7 @@ function BudgetEditModal({
               gap: 16,
               borderTopWidth: 1,
               borderColor: colors.line,
+              width: '100%',
             }}
           >
             <View style={{ alignItems: 'center', gap: 12 }}>
@@ -366,47 +370,42 @@ function BudgetEditModal({
               />
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {currentValue > 0 ? (
-                <Pressable
-                  onPress={handleRemove}
-                  haptic="medium"
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    paddingVertical: 14,
-                    paddingHorizontal: 16,
-                    borderRadius: 14,
-                    backgroundColor: colors.bgCard,
-                  }}
-                >
-                  <Trash2 size={16} color={colors.expense} />
-                  <Text style={{ color: colors.expense, fontWeight: '700' }}>Remover</Text>
-                </Pressable>
-              ) : null}
+            <Pressable
+              onPress={handleSave}
+              haptic="medium"
+              scaleTo={0.97}
+              style={{
+                backgroundColor: cents > 0 ? colors.brand : colors.bgElev,
+                paddingVertical: 16,
+                borderRadius: 16,
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Check size={20} color={cents > 0 ? colors.bg : colors.inkDim} strokeWidth={2.6} />
+              <Text style={{ color: cents > 0 ? colors.bg : colors.inkDim, fontSize: 16, fontWeight: '800' }}>
+                Salvar limite
+              </Text>
+            </Pressable>
+
+            {currentValue > 0 ? (
               <Pressable
-                onPress={handleSave}
+                onPress={handleRemove}
                 haptic="medium"
-                scaleTo={0.97}
                 style={{
-                  flex: 1,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  paddingVertical: 14,
-                  borderRadius: 14,
-                  backgroundColor: cents > 0 ? colors.brand : colors.bgElev,
+                  paddingVertical: 12,
                 }}
               >
-                <Check size={18} color={cents > 0 ? colors.bg : colors.inkDim} strokeWidth={2.6} />
-                <Text style={{ color: cents > 0 ? colors.bg : colors.inkDim, fontWeight: '800' }}>
-                  Salvar limite
-                </Text>
+                <Trash2 size={16} color={colors.expense} />
+                <Text style={{ color: colors.expense, fontWeight: '700' }}>Remover orçamento</Text>
               </Pressable>
-            </View>
+            ) : null}
           </View>
         </KeyboardAvoidingView>
       </View>
