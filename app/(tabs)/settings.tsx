@@ -16,6 +16,7 @@ import {
   Repeat,
   Target,
   Layers,
+  Bell,
 } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
@@ -119,27 +120,7 @@ export default function SettingsScreen() {
   };
 
   const handleWipe = () => {
-    Alert.alert(
-      'Apagar todos os dados?',
-      'Esta ação não pode ser desfeita. Exporte um backup antes se quiser preservar.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Apagar tudo',
-          style: 'destructive',
-          onPress: async () => {
-            await db.execAsync(
-              'DELETE FROM transactions; DELETE FROM recurring_templates; DELETE FROM budgets; DELETE FROM cards; DELETE FROM categories;'
-            );
-            const { migrate } = await import('@/db/schema');
-            await db.execAsync('PRAGMA user_version = 0');
-            await migrate(db);
-            bump();
-            Alert.alert('Pronto', 'Todos os dados foram apagados.');
-          },
-        },
-      ]
-    );
+    router.push('/wipe');
   };
 
   return (
@@ -177,6 +158,13 @@ export default function SettingsScreen() {
             title="Lançamento parcelado"
             subtitle="Compra ou dívida com data para acabar"
             onPress={() => router.push('/installment')}
+          />
+          <Item
+            Icon={Bell}
+            tint={colors.warn}
+            title="Notificações"
+            subtitle="Lembrete antes da fatura vencer"
+            onPress={() => router.push('/notifications')}
           />
         </Section>
 

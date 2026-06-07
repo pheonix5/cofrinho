@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
 import { runRecurrences } from '@/db/recurring';
+import { rescheduleInvoiceReminders } from '@/notifications/invoiceReminder';
 import { useBumpReload } from './useReload';
 
 export function RecurrencesRunner() {
@@ -15,6 +16,7 @@ export function RecurrencesRunner() {
       } catch (e) {
         console.warn('runRecurrences failed', e);
       }
+      void rescheduleInvoiceReminders(db);
     })();
   }, [db, bump]);
 

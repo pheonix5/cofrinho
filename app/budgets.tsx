@@ -5,9 +5,8 @@ import {
   ScrollView,
   Modal,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -315,10 +314,7 @@ function BudgetEditModal({
           haptic={false}
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' }}
         />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ width: '100%' }}
-        >
+        <KeyboardStickyView style={{ width: '100%' }}>
           <View
             style={{
               backgroundColor: colors.bgSoft,
@@ -407,7 +403,7 @@ function BudgetEditModal({
               </Pressable>
             ) : null}
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardStickyView>
       </View>
     </Modal>
   );

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SQLiteProvider } from 'expo-sqlite';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
@@ -15,8 +16,9 @@ import { colors } from '@/theme/colors';
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <SafeAreaProvider>
-        <Suspense
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <Suspense
           fallback={
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
               <ActivityIndicator color={colors.brand} />
@@ -85,11 +87,26 @@ export default function RootLayout() {
                     animation: 'slide_from_right',
                   }}
                 />
+                <Stack.Screen
+                  name="notifications"
+                  options={{
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
+                <Stack.Screen
+                  name="wipe"
+                  options={{
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
               </Stack>
             </ReloadProvider>
           </SQLiteProvider>
         </Suspense>
-      </SafeAreaProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

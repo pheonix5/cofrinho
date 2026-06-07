@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   Alert,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,6 +41,7 @@ export default function InstallmentScreen() {
   const [firstDate, setFirstDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const parcelInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     (async () => {
@@ -101,10 +101,7 @@ export default function InstallmentScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -133,9 +130,11 @@ export default function InstallmentScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 20 }}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={20}
+          showsVerticalScrollIndicator={false}
         >
           <View style={{ paddingHorizontal: 4 }}>
             <KindToggle value={kind} onChange={setKind} />
@@ -173,22 +172,27 @@ export default function InstallmentScreen() {
 
           <View>
             <Label>Parcelas</Label>
-            <View
+            <Pressable
+              onPress={() => parcelInputRef.current?.focus()}
+              haptic="selection"
+              scaleTo={1}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 10,
                 backgroundColor: colors.bgCard,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             >
               <Layers size={18} color={colors.inkSoft} />
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>Quantidade</Text>
               <TextInput
+                ref={parcelInputRef}
                 value={parcelStr}
                 onChangeText={(v) => {
                   const cleaned = v.replace(/\D/g, '').slice(0, 2);
@@ -211,7 +215,7 @@ export default function InstallmentScreen() {
                     : `≈ ${formatBRL(perParcelCents)}/parcela`
                   : ''}
               </Text>
-            </View>
+            </Pressable>
           </View>
 
           <View>
@@ -234,17 +238,31 @@ export default function InstallmentScreen() {
                 backgroundColor: colors.bgCard,
                 color: colors.ink,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             />
           </View>
 
           <View>
             <Label>Primeira parcela em</Label>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+              <DateShortcut
+                label="Este mês"
+                onPress={() => setFirstDate(new Date())}
+              />
+              <DateShortcut
+                label="Próximo mês"
+                onPress={() => {
+                  const d = new Date();
+                  setFirstDate(new Date(d.getFullYear(), d.getMonth() + 1, 1));
+                }}
+              />
+            </View>
             <Pressable
               onPress={() => setShowPicker(true)}
               haptic="selection"
@@ -276,7 +294,7 @@ export default function InstallmentScreen() {
               />
             ) : null}
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>
           <Pressable
@@ -311,7 +329,7 @@ export default function InstallmentScreen() {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -347,6 +365,26 @@ function ModeOption({
       >
         {label}
       </Text>
+    </Pressable>
+  );
+}
+
+function DateShortcut({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      haptic="selection"
+      scaleTo={0.96}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 10,
+        backgroundColor: colors.bgElev,
+        borderWidth: 1,
+        borderColor: colors.line,
+      }}
+    >
+      <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700' }}>{label}</Text>
     </Pressable>
   );
 }

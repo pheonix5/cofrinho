@@ -9,6 +9,8 @@ import { SummaryCard } from '@/components/SummaryCard';
 import { TransactionRow } from '@/components/TransactionRow';
 import { FAB } from '@/components/FAB';
 import { EmptyState } from '@/components/EmptyState';
+import { Pressable } from '@/components/Pressable';
+import type { TxKind } from '@/db/types';
 import { monthBounds, shiftMonth } from '@/utils/date';
 import { listTransactionsByPeriod } from '@/db/transactions';
 import { getMonthComparison } from '@/db/reports';
@@ -31,6 +33,7 @@ export default function HomeScreen() {
   const [items, setItems] = useState<ListItem[]>([]);
   const [projectionSummary, setProjectionSummary] = useState<PeriodSummary | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<'all' | TxKind>('all');
 
   const load = useCallback(async () => {
     const current = monthBounds(month);
@@ -95,8 +98,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const realCount = useMemo(() => items.filter((i) => !i.is_projection).length, [items]);
-  const projectedCount = useMemo(() => items.filter((i) => i.is_projection).length, [items]);
+  const filteredItems = useMemo(
+    () => (filter === 'all' ? items : items.filter((i) => i.kind === filter)),
+    [items, filter]
+  );
+  const realCount = useMemo(() => filteredItems.filter((i) => !i.is_projection).length, [filteredItems]);
+  const projectedCount = useMemo(() => filteredItems.filter((i) => i.is_projection).length, [filteredItems]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -160,7 +167,7 @@ export default function HomeScreen() {
           <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '700' }}>
             Lançamentos
           </Text>
-          {items.length > 0 ? (
+          {filteredItems.length > 0 ? (
             <Text style={{ color: colors.inkMuted, fontSize: 12 }}>
               {realCount} {realCount === 1 ? 'real' : 'reais'}
               {projectedCount > 0 ? ` · ${projectedCount} previsto${projectedCount === 1 ? '' : 's'}` : ''}
@@ -168,13 +175,48 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
-        {items.length === 0 ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            backgroundColor: colors.bgSoft,
+            borderRadius: 12,
+            padding: 3,
+            gap: 3,
+            marginBottom: 12,
+          }}
+        >
+          <FilterChip label="Todos" active={filter === 'all'} onPress={() => setFilter('all')} />
+          <FilterChip
+            label="Entradas"
+            active={filter === 'income'}
+            tint={colors.income}
+            onPress={() => setFilter('income')}
+          />
+          <FilterChip
+            label="Saídas"
+            active={filter === 'expense'}
+            tint={colors.expense}
+            onPress={() => setFilter('expense')}
+          />
+        </View>
+
+        {filteredItems.length === 0 ? (
           <EmptyState
-            title="Nenhum lançamento neste mês"
-            subtitle="Toque no botão + para adicionar uma entrada ou saída."
+            title={
+              items.length === 0
+                ? 'Nenhum lançamento neste mês'
+                : filter === 'income'
+                ? 'Nenhuma entrada neste mês'
+                : 'Nenhuma saída neste mês'
+            }
+            subtitle={
+              items.length === 0
+                ? 'Toque no botão + para adicionar uma entrada ou saída.'
+                : 'Mude o filtro acima para ver outros lançamentos.'
+            }
           />
         ) : (
-          items.map((item) => (
+          filteredItems.map((item) => (
             <TransactionRow
               key={item.is_projection ? item.synthetic_id : `tx-${item.id}`}
               tx={item}
@@ -197,5 +239,43 @@ export default function HomeScreen() {
 
       <FAB onPress={() => router.push('/transaction')} />
     </View>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onPress,
+  tint,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  tint?: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      haptic="selection"
+      scaleTo={1}
+      style={{
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 10,
+        backgroundColor: active ? colors.bgElev : 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text
+        style={{
+          color: active ? (tint ?? colors.ink) : colors.inkMuted,
+          fontWeight: '700',
+          fontSize: 13,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }

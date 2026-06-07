@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   Alert,
   Switch,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +20,7 @@ import {
   updateCard,
 } from '@/db/cards';
 import { useBumpReload } from '@/hooks/useReload';
+import { rescheduleInvoiceReminders } from '@/notifications/invoiceReminder';
 import { colors } from '@/theme/colors';
 
 const CARD_COLORS = [
@@ -68,6 +67,7 @@ export default function CardEditScreen() {
     } else {
       await createCard(db, payload);
     }
+    void rescheduleInvoiceReminders(db);
     bump();
     router.back();
   };
@@ -83,6 +83,7 @@ export default function CardEditScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteCard(db, editingId!);
+            void rescheduleInvoiceReminders(db);
             bump();
             router.back();
           },
@@ -93,10 +94,7 @@ export default function CardEditScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -142,9 +140,11 @@ export default function CardEditScreen() {
           )}
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 22 }}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={20}
+          showsVerticalScrollIndicator={false}
         >
           <View
             style={{
@@ -188,11 +188,12 @@ export default function CardEditScreen() {
                 backgroundColor: colors.bgCard,
                 color: colors.ink,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             />
           </View>
@@ -250,7 +251,7 @@ export default function CardEditScreen() {
               thumbColor={active ? colors.brand : colors.inkDim}
             />
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>
           <Pressable
@@ -273,7 +274,7 @@ export default function CardEditScreen() {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -287,21 +288,28 @@ function DayField({
   value: number;
   onChange: (n: number) => void;
 }) {
+  const inputRef = useRef<TextInput>(null);
   return (
     <View style={{ flex: 1 }}>
       <Label>{label}</Label>
-      <View
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
+        haptic="selection"
+        scaleTo={1}
         style={{
           backgroundColor: colors.bgCard,
           borderRadius: 14,
-          paddingVertical: 10,
+          paddingVertical: 14,
           paddingHorizontal: 14,
           borderWidth: 1,
           borderColor: colors.line,
           alignItems: 'center',
+          minHeight: 60,
+          justifyContent: 'center',
         }}
       >
         <TextInput
+          ref={inputRef}
           value={String(value)}
           onChangeText={(v) => {
             const n = parseInt(v.replace(/\D/g, ''), 10);
@@ -318,7 +326,7 @@ function DayField({
             minWidth: 50,
           }}
         />
-      </View>
+      </Pressable>
     </View>
   );
 }

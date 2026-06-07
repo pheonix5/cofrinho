@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,7 +40,7 @@ export default function RecurringEditScreen() {
   const [description, setDescription] = useState<string>('');
   const [dayStr, setDayStr] = useState<string>('5');
   const [categories, setCategories] = useState<Category[]>([]);
-  const scrollRef = useRef<ScrollView>(null);
+  const dayInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     (async () => {
@@ -107,10 +105,7 @@ export default function RecurringEditScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -139,10 +134,11 @@ export default function RecurringEditScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView
-          ref={scrollRef}
+        <KeyboardAwareScrollView
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 20 }}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={20}
+          showsVerticalScrollIndicator={false}
         >
           <View style={{ paddingHorizontal: 4 }}>
             <KindToggle value={kind} onChange={setKind} />
@@ -177,40 +173,43 @@ export default function RecurringEditScreen() {
                 backgroundColor: colors.bgCard,
                 color: colors.ink,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             />
           </View>
 
           <View>
             <Label>Dia do mês</Label>
-            <View
+            <Pressable
+              onPress={() => dayInputRef.current?.focus()}
+              haptic="selection"
+              scaleTo={1}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 10,
                 backgroundColor: colors.bgCard,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             >
               <Calendar size={18} color={colors.inkSoft} />
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>Lança todo dia</Text>
               <TextInput
+                ref={dayInputRef}
                 value={dayStr}
                 onChangeText={(v) => {
                   const cleaned = v.replace(/\D/g, '').slice(0, 2);
                   setDayStr(cleaned);
-                }}
-                onFocus={() => {
-                  setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
                 }}
                 keyboardType="number-pad"
                 maxLength={2}
@@ -225,10 +224,10 @@ export default function RecurringEditScreen() {
               <Text style={{ color: colors.inkMuted, fontSize: 13 }}>
                 {parseInt(dayStr, 10) > 28 ? '(ou último dia do mês)' : ''}
               </Text>
-            </View>
+            </Pressable>
           </View>
 
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>
           <Pressable
@@ -251,7 +250,7 @@ export default function RecurringEditScreen() {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

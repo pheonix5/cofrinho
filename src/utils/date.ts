@@ -51,3 +51,15 @@ export function fromMonthKey(key: string): Date {
   const [y, m] = key.split('-').map(Number);
   return new Date(y, m - 1, 1);
 }
+
+export function formatInvoiceAnchor(anchor: { year: number; month: number }): string {
+  const d = new Date(anchor.year, anchor.month, 1);
+  const s = format(d, "MMM 'de' yyyy", { locale: ptBR });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function formatInvoiceDueDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return format(date, 'dd/MM');
+}

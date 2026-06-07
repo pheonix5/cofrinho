@@ -68,15 +68,20 @@ export default function ReportsScreen() {
         label,
         frontColor: colors.income,
         spacing: 4,
+        barBorderRadius: 4,
       });
       data.push({
         value: m.expense_cents / 100,
         frontColor: colors.expense,
         spacing: 18,
+        barBorderRadius: 4,
       });
     });
     return data;
   }, [monthly]);
+
+  const hasIncome = useMemo(() => monthly.some((m) => m.income_cents > 0), [monthly]);
+  const hasExpense = useMemo(() => monthly.some((m) => m.expense_cents > 0), [monthly]);
 
   const pieData = useMemo(() => {
     const total = breakdown.reduce((acc, c) => acc + c.total_cents, 0);
@@ -158,6 +163,11 @@ export default function ReportsScreen() {
             <Text style={{ color: colors.inkMuted, fontSize: 12, fontWeight: '600', letterSpacing: 0.5 }}>
               ENTRADAS vs SAÍDAS
             </Text>
+            {!hasIncome && hasExpense ? (
+              <Text style={{ color: colors.inkMuted, fontSize: 11 }}>
+                Sem entradas registradas neste período.
+              </Text>
+            ) : null}
             <View style={{ paddingTop: 8 }}>
               <BarChart
                 data={barData}
@@ -174,6 +184,7 @@ export default function ReportsScreen() {
                 height={160}
                 spacing={8}
                 initialSpacing={8}
+                frontColor={colors.income}
                 disablePress
               />
             </View>

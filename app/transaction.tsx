@@ -2,12 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   Alert,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,7 +22,7 @@ import { InstallmentPicker } from '@/components/InstallmentPicker';
 import { VoiceCapture } from '@/components/VoiceCapture';
 import { QuickShortcuts } from '@/components/QuickShortcuts';
 import { listCategories } from '@/db/categories';
-import { listCards } from '@/db/cards';
+import { getInvoiceAnchorForTxDate, getInvoiceWindow, listCards } from '@/db/cards';
 import type { Card } from '@/db/cards';
 import {
   createTransaction,
@@ -36,7 +35,7 @@ import type { FrequentShortcut } from '@/db/reports';
 import type { Category, TxKind } from '@/db/types';
 import { useBumpReload } from '@/hooks/useReload';
 import { digitsToCents } from '@/utils/format';
-import { formatDateLabel } from '@/utils/date';
+import { formatDateLabel, formatInvoiceAnchor, formatInvoiceDueDate } from '@/utils/date';
 import { colors } from '@/theme/colors';
 
 export default function TransactionScreen() {
@@ -126,6 +125,18 @@ export default function TransactionScreen() {
     [categories, kind]
   );
 
+  const invoiceInfo = useMemo(() => {
+    if (cardId == null) return null;
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return null;
+    const txISO = date.toISOString();
+    const anchor = getInvoiceAnchorForTxDate(card, txISO);
+    const isFuture = anchor.year !== date.getFullYear() || anchor.month !== date.getMonth();
+    if (!isFuture) return null;
+    const window = getInvoiceWindow(card, anchor.year, anchor.month);
+    return { window, anchor };
+  }, [cardId, cards, date]);
+
   useEffect(() => {
     if (categoryId == null) return;
     if (categories.length === 0) return;
@@ -176,10 +187,7 @@ export default function TransactionScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -238,9 +246,11 @@ export default function TransactionScreen() {
           )}
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 20 }}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={20}
+          showsVerticalScrollIndicator={false}
         >
           <View style={{ paddingHorizontal: 4 }}>
             <KindToggle value={kind} onChange={setKind} />
@@ -284,6 +294,28 @@ export default function TransactionScreen() {
             </View>
           ) : null}
 
+          {invoiceInfo ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                backgroundColor: `${colors.brand}1A`,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                borderWidth: 1,
+                borderColor: `${colors.brand}33`,
+              }}
+            >
+              <Calendar size={16} color={colors.brand} />
+              <Text style={{ flex: 1, color: colors.ink, fontSize: 13, fontWeight: '600' }}>
+                Entrará na fatura de {formatInvoiceAnchor(invoiceInfo.anchor)} · venc.{' '}
+                {formatInvoiceDueDate(invoiceInfo.window.dueDate)}
+              </Text>
+            </View>
+          ) : null}
+
           <View>
             <Label>Categoria</Label>
             <CategoryPicker
@@ -304,11 +336,12 @@ export default function TransactionScreen() {
                 backgroundColor: colors.bgCard,
                 color: colors.ink,
                 paddingHorizontal: 14,
-                paddingVertical: 12,
+                paddingVertical: 16,
                 borderRadius: 14,
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: colors.line,
+                minHeight: 52,
               }}
             />
           </View>
@@ -349,7 +382,7 @@ export default function TransactionScreen() {
             ) : null}
           </View>
 
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bgSoft }}>
           <Pressable
@@ -372,7 +405,7 @@ export default function TransactionScreen() {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
 
       <VoiceCapture
         visible={voiceOpen}
