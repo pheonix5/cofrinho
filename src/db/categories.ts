@@ -27,6 +27,31 @@ export async function createCategory(
   return result.lastInsertRowId;
 }
 
+export async function updateCategory(
+  db: SQLiteDatabase,
+  id: number,
+  input: { name: string; icon: string; color: string }
+): Promise<void> {
+  await db.runAsync(
+    'UPDATE categories SET name = ?, icon = ?, color = ? WHERE id = ?',
+    [input.name.trim(), input.icon, input.color, id]
+  );
+}
+
 export async function deleteCategory(db: SQLiteDatabase, id: number): Promise<void> {
-  await db.runAsync('DELETE FROM categories WHERE id = ? AND is_default = 0', [id]);
+  await db.runAsync('DELETE FROM categories WHERE id = ?', [id]);
+}
+
+export async function countCategoryUsage(
+  db: SQLiteDatabase,
+  id: number
+): Promise<number> {
+  const row = await db.getFirstAsync<{ c: number }>(
+    `SELECT
+       (SELECT COUNT(*) FROM transactions WHERE category_id = ?) +
+       (SELECT COUNT(*) FROM recurring_templates WHERE category_id = ?) +
+       (SELECT COUNT(*) FROM budgets WHERE category_id = ?) AS c`,
+    [id, id, id]
+  );
+  return row?.c ?? 0;
 }

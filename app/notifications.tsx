@@ -112,10 +112,10 @@ export default function NotificationsScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700' }}>
-                Lembrete de fatura
+                Lembrete de vencimentos
               </Text>
               <Text style={{ color: colors.inkMuted, fontSize: 12 }}>
-                Avisa antes do vencimento de cada cartão ativo.
+                Faturas de cartão e contas recorrentes (luz, água, internet).
               </Text>
             </View>
             <Switch

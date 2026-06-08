@@ -14,6 +14,7 @@ import {
   setRecurringActive,
 } from '@/db/recurring';
 import type { RecurringWithCategory } from '@/db/recurring';
+import { rescheduleInvoiceReminders } from '@/notifications/invoiceReminder';
 import { useBumpReload, useReloadToken } from '@/hooks/useReload';
 import { formatBRL } from '@/utils/format';
 import { colors } from '@/theme/colors';
@@ -37,6 +38,7 @@ export default function RecurringListScreen() {
 
   const toggle = async (id: number, active: boolean) => {
     await setRecurringActive(db, id, active);
+    void rescheduleInvoiceReminders(db);
     bump();
   };
 
@@ -51,6 +53,7 @@ export default function RecurringListScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteRecurring(db, id);
+            void rescheduleInvoiceReminders(db);
             bump();
           },
         },

@@ -17,6 +17,7 @@ import {
   Target,
   Layers,
   Bell,
+  Tags,
 } from 'lucide-react-native';
 
 import { Pressable } from '@/components/Pressable';
@@ -163,8 +164,15 @@ export default function SettingsScreen() {
             Icon={Bell}
             tint={colors.warn}
             title="Notificações"
-            subtitle="Lembrete antes da fatura vencer"
+            subtitle="Lembrete antes de faturas e contas vencerem"
             onPress={() => router.push('/notifications')}
+          />
+          <Item
+            Icon={Tags}
+            tint={colors.income}
+            title="Categorias"
+            subtitle="Criar, editar e organizar"
+            onPress={() => router.push('/categories')}
           />
         </Section>
 

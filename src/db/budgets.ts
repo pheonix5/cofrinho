@@ -1,4 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { EFFECTIVE_AT_EXPR } from './sqlHelpers';
 
 export type BudgetProgress = {
   category_id: number;
@@ -22,12 +23,13 @@ export async function listBudgetsWithProgress(
        c.color AS category_color,
        b.monthly_cents AS monthly_cents,
        COALESCE((
-         SELECT SUM(amount_cents)
-         FROM transactions
-         WHERE category_id = b.category_id
-           AND kind = 'expense'
-           AND is_card_payment = 0
-           AND occurred_at >= ? AND occurred_at < ?
+         SELECT SUM(t.amount_cents)
+         FROM transactions t
+         LEFT JOIN cards cd ON cd.id = t.card_id
+         WHERE t.category_id = b.category_id
+           AND t.kind = 'expense'
+           AND t.is_card_payment = 0
+           AND ${EFFECTIVE_AT_EXPR} >= ? AND ${EFFECTIVE_AT_EXPR} < ?
        ), 0) AS spent_cents
      FROM budgets b
      INNER JOIN categories c ON c.id = b.category_id

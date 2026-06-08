@@ -22,6 +22,7 @@ import {
   updateRecurring,
 } from '@/db/recurring';
 import type { Category, TxKind } from '@/db/types';
+import { rescheduleInvoiceReminders } from '@/notifications/invoiceReminder';
 import { useBumpReload } from '@/hooks/useReload';
 import { digitsToCents } from '@/utils/format';
 import { colors } from '@/theme/colors';
@@ -99,6 +100,7 @@ export default function RecurringEditScreen() {
     } else {
       await createRecurring(db, payload);
     }
+    void rescheduleInvoiceReminders(db);
     bump();
     router.back();
   }, [cents, kind, categoryId, description, dayStr, isEditing, editingId, db, bump, router]);

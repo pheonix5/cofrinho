@@ -5,6 +5,7 @@ import type {
   PeriodSummary,
   TxKind,
 } from './types';
+import { EFFECTIVE_AT_EXPR } from './sqlHelpers';
 
 export async function getPeriodSummary(
   db: SQLiteDatabase,
@@ -17,11 +18,13 @@ export async function getPeriodSummary(
     count: number;
   }>(
     `SELECT
-       COALESCE(SUM(CASE WHEN kind = 'income' THEN amount_cents END), 0) AS income_cents,
-       COALESCE(SUM(CASE WHEN kind = 'expense' THEN amount_cents END), 0) AS expense_cents,
+       COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.amount_cents END), 0) AS income_cents,
+       COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN t.amount_cents END), 0) AS expense_cents,
        COUNT(*) AS count
-     FROM transactions
-     WHERE occurred_at >= ? AND occurred_at < ? AND is_card_payment = 0`,
+     FROM transactions t
+     LEFT JOIN cards cd ON cd.id = t.card_id
+     WHERE ${EFFECTIVE_AT_EXPR} >= ? AND ${EFFECTIVE_AT_EXPR} < ?
+       AND t.is_card_payment = 0`,
     [from, to]
   );
   const income = row?.income_cents ?? 0;
@@ -50,7 +53,8 @@ export async function getCategoryBreakdown(
        COUNT(*) AS count
      FROM transactions t
      LEFT JOIN categories c ON c.id = t.category_id
-     WHERE t.kind = ? AND t.occurred_at >= ? AND t.occurred_at < ?
+     LEFT JOIN cards cd ON cd.id = t.card_id
+     WHERE t.kind = ? AND ${EFFECTIVE_AT_EXPR} >= ? AND ${EFFECTIVE_AT_EXPR} < ?
        AND t.is_card_payment = 0
      GROUP BY t.category_id
      ORDER BY total_cents DESC`,
@@ -131,11 +135,12 @@ export async function getMonthlyAggregates(
 ): Promise<MonthAggregate[]> {
   return db.getAllAsync<MonthAggregate>(
     `SELECT
-       strftime('%Y-%m', occurred_at) AS month,
-       COALESCE(SUM(CASE WHEN kind = 'income' THEN amount_cents END), 0) AS income_cents,
-       COALESCE(SUM(CASE WHEN kind = 'expense' THEN amount_cents END), 0) AS expense_cents
-     FROM transactions
-     WHERE occurred_at >= date('now', ?) AND is_card_payment = 0
+       strftime('%Y-%m', ${EFFECTIVE_AT_EXPR}) AS month,
+       COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.amount_cents END), 0) AS income_cents,
+       COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN t.amount_cents END), 0) AS expense_cents
+     FROM transactions t
+     LEFT JOIN cards cd ON cd.id = t.card_id
+     WHERE ${EFFECTIVE_AT_EXPR} >= date('now', ?) AND t.is_card_payment = 0
      GROUP BY month
      ORDER BY month ASC`,
     [`-${monthsBack} months`]

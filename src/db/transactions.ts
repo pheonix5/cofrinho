@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Transaction, TransactionWithCategory, TxKind } from './types';
+import { EFFECTIVE_AT_EXPR } from './sqlHelpers';
 
 export type TxInput = {
   kind: TxKind;
@@ -200,9 +201,9 @@ export async function listTransactionsByPeriod(
     FROM transactions t
     LEFT JOIN categories c ON c.id = t.category_id
     LEFT JOIN cards cd ON cd.id = t.card_id
-    WHERE t.occurred_at >= ? AND t.occurred_at < ?
+    WHERE ${EFFECTIVE_AT_EXPR} >= ? AND ${EFFECTIVE_AT_EXPR} < ?
       AND t.is_card_payment = 0
-    ORDER BY t.occurred_at DESC, t.id DESC
+    ORDER BY ${EFFECTIVE_AT_EXPR} DESC, t.id DESC
     ${limit ? `LIMIT ${Math.floor(limit)}` : ''}
   `;
   return db.getAllAsync<TransactionWithCategory>(sql, [from, to]);
